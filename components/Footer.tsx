@@ -82,7 +82,6 @@ export default function Footer() {
               ['University of Oulu', 'https://www.oulu.fi/fi/yliopisto/tiedekunnat-ja-yksikot/tieto-ja-sahkotekniikan-tiedekunta/jokapaikan-tietotekniikka'],
             ].map(([label, href]) => (
               <a key={href} href={href} target="_blank" rel="noopener noreferrer"
-                rel="noopener noreferrer"
                 style={{ display: 'block', fontSize: 14, color: 'var(--text-muted)', textDecoration: 'none', marginBottom: 8 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}>
