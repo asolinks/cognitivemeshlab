@@ -103,7 +103,6 @@ export default function ContactClient() {
             <a key={i}
               href={c.href}
               target="_blank" rel="noopener noreferrer"
-              rel="noopener noreferrer"
               style={{
                 display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
                 marginBottom: 8, borderRadius: 10,
