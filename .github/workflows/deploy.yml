@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Cognitive Mesh Lab — Automated Deploy Pipeline
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# WHAT THIS DOES:
+#   Every time you push to the `main` branch, GitHub automatically:
+#   1. Checks out your code
+#   2. Installs Node.js dependencies
+#   3. Builds the Next.js static site (generates /out folder)
+#   4. Uploads /out/* to cognitivemeshlab.fi public_html via FTP
+#
+# RESULT: Your live site updates within ~2 minutes of every git push.
+#         No FileZilla. No manual uploads. No zip files.
+#
+# SETUP (one-time — see README):
+#   Add these 3 secrets in GitHub → Settings → Secrets → Actions:
+#   - FTP_SERVER   → 77.240.19.63  (your Louhi server IP)
+#   - FTP_USERNAME → your cPanel FTP username (e.g. cognitiv@cognitivemeshlab.fi)
+#   - FTP_PASSWORD → your cPanel FTP password
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: 🚀 Deploy to cognitivemeshlab.fi
+
+on:
+  push:
+    branches:
+      - main          # Trigger on every push to main
+  workflow_dispatch:  # Also allow manual trigger from GitHub UI
+
+jobs:
+  build-and-deploy:
+    name: Build → Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Get the code ───────────────────────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Node.js ─────────────────────────────────────────────────
+      - name: ⚙️ Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── 3. Install dependencies ───────────────────────────────────────────
+      - name: 📦 Install dependencies
+        run: npm ci
+        # npm ci is faster and more reliable than npm install in CI
+
+      # ── 4. Build the static site ──────────────────────────────────────────
+      - name: 🏗️ Build Next.js static export
+        run: npm run build
+        env:
+          NODE_ENV: production
+          # Add any public env vars your site needs here:
+          # NEXT_PUBLIC_SITE_URL: https://cognitivemeshlab.fi
+
+      # ── 5. Copy .htaccess into out/ ───────────────────────────────────────
+      #    (the .htaccess handles routing, HTTPS redirect, caching headers)
+      - name: 📄 Copy .htaccess to out/
+        run: |
+          if [ -f public/.htaccess ]; then
+            cp public/.htaccess out/.htaccess
+            echo ".htaccess copied to out/"
+          else
+            echo "Warning: public/.htaccess not found"
+          fi
+
+      # ── 6. Show what will be deployed (for debugging) ─────────────────────
+      - name: 📋 List build output
+        run: |
+          echo "=== Files to deploy ==="
+          find out -maxdepth 2 | head -40
+          echo "=== Total files: $(find out -type f | wc -l) ==="
+          echo "=== Total size: $(du -sh out | cut -f1) ==="
+
+      # ── 7. Deploy to Louhi cPanel via FTP ─────────────────────────────────
+      - name: 🚀 Deploy to cognitivemeshlab.fi via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./out/
+          server-dir: /public_html/
+          protocol: ftp
+          port: 21
+          # Only upload files that have changed (faster deploys after first)
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.DS_Store
+
+      # ── 8. Confirm deployment ─────────────────────────────────────────────
+      - name: ✅ Deployment complete
+        run: |
+          echo "=========================================="
+          echo " Site deployed to cognitivemeshlab.fi"
+          echo " Commit: ${{ github.sha }}"
+          echo " Branch: ${{ github.ref_name }}"
+          echo " Time:   $(date)"
+          echo "=========================================="

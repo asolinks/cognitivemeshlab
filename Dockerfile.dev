@@ -1,0 +1,19 @@
+# Cognitive Mesh Lab — Development Container
+# Hot reload enabled. Edit any file → browser updates instantly.
+FROM node:20-alpine
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+COPY . .
+
+EXPOSE 3000
+
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+CMD ["npx", "next", "dev", "-H", "0.0.0.0", "-p", "3000"]

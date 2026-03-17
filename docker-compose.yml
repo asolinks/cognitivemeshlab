@@ -1,0 +1,68 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cognitive Mesh Lab — Docker Compose
+#
+# COMMANDS:
+#
+#   Development (hot reload — use this for editing):
+#     docker compose up dev
+#     → http://localhost:3000
+#     Edit any file → browser updates instantly
+#
+#   Production preview (static build served by Nginx):
+#     docker compose up prod
+#     → http://localhost:8080
+#     Mirrors exactly what cognitivemeshlab.fi serves
+#
+#   Run in background (detached):
+#     docker compose up dev -d
+#     docker compose logs -f dev    (view logs)
+#     docker compose stop           (stop)
+#     docker compose down           (stop + remove containers)
+#
+#   Rebuild after package changes:
+#     docker compose up dev --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Development server ─────────────────────────────────────────────────────
+  # Hot reload — every file edit updates the browser instantly
+  # Your source files are mounted as a volume so edits take effect immediately
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: cognitivemeshlab-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code so edits are reflected instantly (hot reload)
+      - .:/app
+      # Keep node_modules inside the container (faster + avoids conflicts)
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true   # Needed for hot reload in Docker on Linux
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # ── Production preview ─────────────────────────────────────────────────────
+  # Builds the full static export and serves it with Nginx
+  # Use this to preview exactly what the live site looks like
+  prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: cognitivemeshlab-prod
+    ports:
+      - "8080:80"
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+    profiles:
+      - prod

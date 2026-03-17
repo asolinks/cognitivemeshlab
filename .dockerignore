@@ -1,0 +1,21 @@
+# These are excluded from the Docker build context
+# (makes builds much faster — node_modules alone is 400MB+)
+
+node_modules
+.next
+out
+.git
+.gitignore
+README.md
+*.md
+.env
+.env.local
+.env.*
+npm-debug.log*
+.DS_Store
+Thumbs.db
+*.zip
+Dockerfile*
+docker-compose*
+nginx.conf
+setup.sh
