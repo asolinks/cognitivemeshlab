@@ -76,6 +76,7 @@ export default function Footer() {
           <div>
             <p style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--accent-amber)', marginBottom: 14, letterSpacing: '0.08em' }}>CONNECT</p>
             {[
+              ['YouTube', 'https://www.youtube.com/@CognitiveMeshLab'],
               ['GitHub', 'https://github.com/cognitive-mesh-lab'],
               ['LinkedIn', 'https://www.linkedin.com/company/cognitive-mesh-lab'],
               ['Email', 'mailto:stanley@cognitivemeshlab.fi'],
