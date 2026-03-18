@@ -73,7 +73,7 @@ export default function Navbar() {
         }}>
           {/* Logo circle */}
           <div style={{
-            width: 42, height: 42,
+            width: 56, height: 56,
             borderRadius: '50%',
             background: 'radial-gradient(circle at 35% 35%, #0a1a2e 0%, #000 100%)',
             border: '2px solid rgba(20,184,166,0.6)',
@@ -86,7 +86,7 @@ export default function Navbar() {
             <img
               src="/logo.png"
               alt="Cognitive Mesh Lab"
-              style={{ width: 50, height: 50, objectFit: 'contain' }}
+              style={{ width: 56, height: 56, objectFit: 'contain' }}
             />
           </div>
 
@@ -94,7 +94,7 @@ export default function Navbar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <span style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 18,
+              fontSize: 28,
               fontWeight: 600,
               color: '#e8ecf4',
               letterSpacing: '-0.02em',
