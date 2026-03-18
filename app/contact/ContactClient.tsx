@@ -184,7 +184,7 @@ export default function ContactClient() {
                   onFocus={e => e.currentTarget.style.borderColor = 'var(--accent-blue)'}
                   onBlur={e => e.currentTarget.style.borderColor = 'var(--border)'}>
                   <option value="">Select a topic…</option>
-                  {services.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                  {services.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
                 </select>
               </div>
 
