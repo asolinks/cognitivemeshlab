@@ -48,7 +48,7 @@ export default function ContactClient() {
           name: form.name,
           email: form.email,
           organisation: form.org,
-          service: form.service,
+          topic: form.service,
           message: form.message,
         }),
       })
