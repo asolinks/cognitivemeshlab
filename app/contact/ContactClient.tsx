@@ -48,7 +48,7 @@ export default function ContactClient() {
           name: form.name,
           email: form.email,
           organisation: form.org,
-          topic: form.service,
+          topic: form.service || null,
           message: form.message,
         }),
       })
@@ -176,10 +176,7 @@ export default function ContactClient() {
               <div>
                 <label style={labelStyle}>Topic *</label>
                 <select required value={form.service}
-                  onChange={e => {
-                    const selected = services.find(s => s.id === e.target.value)
-                    setForm({ ...form, service: selected ? selected.label : e.target.value })
-                  }}
+                  onChange={e => setForm({ ...form, service: e.target.value })}
                   style={{ ...inputStyle, cursor: 'pointer', background: '#0d1225', color: '#e8ecf4', colorScheme: 'dark' }}
                   onFocus={e => e.currentTarget.style.borderColor = 'var(--accent-blue)'}
                   onBlur={e => e.currentTarget.style.borderColor = 'var(--border)'}>
