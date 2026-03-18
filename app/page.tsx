@@ -82,7 +82,7 @@ export default function HomePage() {
         maxWidth: 1200, margin: '0 auto',
       }}>
         {/* Status badge */}
-        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span className="tag tag-teal animate-fade-up" style={{ animationDelay: '0s' }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2dd4bf', display: 'inline-block', marginRight: 6, animation: 'node-pulse 2s ease-in-out infinite' }}></span>
             PhD Research — University of Oulu
@@ -95,7 +95,7 @@ export default function HomePage() {
         {/* Main headline */}
         <h1 className="animate-fade-up delay-200" style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(42px, 7vw, 88px)',
+          fontSize: 'clamp(32px, 7vw, 88px)',
           lineHeight: 1.08,
           color: 'var(--text-primary)',
           marginBottom: 8,
