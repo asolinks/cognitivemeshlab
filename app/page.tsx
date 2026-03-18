@@ -198,7 +198,7 @@ export default function HomePage() {
       {/* ── RESEARCH AREAS ───────────────────────────────── */}
       <section style={{ padding: '80px 24px', background: 'rgba(8,12,24,0.6)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 480px), 1fr))', gap: 48, alignItems: 'start' }}>
             <div>
               <p style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--accent-teal)', letterSpacing: '0.1em', marginBottom: 8 }}>RESEARCH FOCUS</p>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3.5vw, 38px)', color: 'var(--text-primary)', marginBottom: 16 }}>
