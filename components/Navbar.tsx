@@ -45,8 +45,8 @@ export default function Navbar() {
       <div style={{
         maxWidth: 1200,
         margin: '0 auto',
-        display: 'grid',
-        gridTemplateColumns: '1fr auto 1fr',
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         height: scrolled ? 62 : 68,
         padding: '0 20px',
@@ -70,7 +70,6 @@ export default function Navbar() {
           display: 'flex',
           alignItems: 'center',
           gap: 14,
-          justifySelf: 'start',
         }}>
           {/* Logo circle */}
           <div style={{
@@ -136,7 +135,6 @@ export default function Navbar() {
             display: 'flex',
             alignItems: 'center',
             gap: 2,
-            justifySelf: 'center',
           }}
         >
           {links.map(l => {
@@ -168,7 +166,6 @@ export default function Navbar() {
 
         {/* ── RIGHT: CTA ─────────────────────────────────────── */}
         <div style={{
-          justifySelf: 'end',
           display: 'flex',
           alignItems: 'center',
         }}>
