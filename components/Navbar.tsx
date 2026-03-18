@@ -48,8 +48,8 @@ export default function Navbar() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        height: scrolled ? 62 : 68,
-        padding: '0 20px',
+        height: scrolled ? 62 : 72,
+        padding: '0 16px',
         transition: 'all 0.35s ease',
         background: navBg,
         backdropFilter: 'blur(24px)',
@@ -94,7 +94,7 @@ export default function Navbar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <span style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 28,
+              fontSize: 'clamp(18px, 5vw, 28px)',
               fontWeight: 600,
               color: '#e8ecf4',
               letterSpacing: '-0.02em',
