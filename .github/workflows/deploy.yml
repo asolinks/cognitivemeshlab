@@ -55,8 +55,8 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          # Add any public env vars your site needs here:
-          # NEXT_PUBLIC_SITE_URL: https://cognitivemeshlab.fi
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       # ── 5. Copy .htaccess into out/ ───────────────────────────────────────
       #    (the .htaccess handles routing, HTTPS redirect, caching headers)
