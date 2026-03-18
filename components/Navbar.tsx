@@ -73,7 +73,7 @@ export default function Navbar() {
         }}>
           {/* Logo circle */}
           <div style={{
-            width: 50, height: 50,
+            width: 42, height: 42,
             borderRadius: '50%',
             background: 'radial-gradient(circle at 35% 35%, #0a1a2e 0%, #000 100%)',
             border: '2px solid rgba(20,184,166,0.6)',
@@ -94,7 +94,7 @@ export default function Navbar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <span style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(16px, 4vw, 20px)',
+              fontSize: 18,
               fontWeight: 600,
               color: '#e8ecf4',
               letterSpacing: '-0.02em',
@@ -146,7 +146,7 @@ export default function Navbar() {
                 style={{
                   padding: '7px 14px',
                   borderRadius: 8,
-                  fontSize: 13.5,
+                  fontSize: 15,
                   fontWeight: 500,
                   textDecoration: 'none',
                   fontFamily: 'var(--font-body)',
@@ -179,7 +179,7 @@ export default function Navbar() {
               gap: 7,
               padding: '9px 20px',
               borderRadius: 10,
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 600,
               textDecoration: 'none',
               fontFamily: 'var(--font-body)',
