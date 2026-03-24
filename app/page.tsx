@@ -283,6 +283,71 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── MESHNODE CTA ── */}
+      <section style={{
+        margin: '80px 0',
+        padding: '48px 40px',
+        background: 'rgba(20,184,166,0.05)',
+        border: '1px solid rgba(20,184,166,0.2)',
+        borderRadius: 16,
+      }}>
+        <div style={{
+          fontFamily: 'var(--font-mono, "DM Mono", monospace)',
+          fontSize: 11, letterSpacing: '0.16em',
+          textTransform: 'uppercase', color: 'var(--color-accent, #14b8a6)',
+          marginBottom: 16,
+        }}>
+          MESHNODE — AI BUSINESS INTELLIGENCE
+        </div>
+        <h2 style={{
+          fontFamily: 'var(--font-display, "DM Serif Display", serif)',
+          fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 400,
+          lineHeight: 1.15, marginBottom: 16,
+          color: 'var(--color-text, #e2e8f0)',
+        }}>
+          Is your Oulu business leaving{' '}
+          <em style={{ color: 'var(--color-accent, #14b8a6)', fontStyle: 'italic' }}>
+            money on the table?
+          </em>
+        </h2>
+        <p style={{
+          fontSize: 16, color: 'rgba(255,255,255,0.5)',
+          lineHeight: 1.7, maxWidth: 560, marginBottom: 28,
+          fontFamily: 'var(--font-body, "Outfit", sans-serif)', fontWeight: 300,
+        }}>
+          The same AI agent architecture I research at UBICOMP — applied to real
+          Oulu businesses. Answer 6 questions tailored to your exact business type
+          and get a free, personalised analysis showing your top AI opportunities
+          and ROI potential.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+          <a href="/analyse" style={{
+            display: 'inline-block', padding: '13px 28px',
+            background: 'var(--color-accent, #14b8a6)', color: '#080c18',
+            borderRadius: 9, fontSize: 14, fontWeight: 600, textDecoration: 'none',
+            fontFamily: 'var(--font-body, "Outfit", sans-serif)',
+            transition: 'opacity 0.2s',
+          }}>
+            Get your free analysis →
+          </a>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            fontFamily: 'var(--font-mono, "DM Mono", monospace)',
+            fontSize: 12,
+          }}>
+            <span style={{
+              width: 7, height: 7, borderRadius: '50%',
+              background: '#10b981', display: 'inline-block',
+              animation: 'pulse 1.5s infinite',
+            }} />
+            <span style={{ color: '#10b981', fontWeight: 500 }}>5</span>
+            <span style={{ color: 'rgba(255,255,255,0.35)' }}>
+              free on-site analyses remaining
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ──────────────────────────────────────────── */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{
