@@ -194,7 +194,12 @@ function buildRecs(pains: string[], ratings: Record<string,number>): Rec[] {
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 export default function AnalyseClient() {
-  const [lang,     setLang]     = useState<Lang>('en')
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('meshnode_lang') as Lang) ?? 'en'
+    }
+    return 'en'
+  })
   const [step,     setStep]     = useState<StepId>(1)
   const [search,   setSearch]   = useState('')
   const [biz,      setBiz]      = useState('')
@@ -240,6 +245,15 @@ export default function AnalyseClient() {
       if (ringRef.current) ringRef.current.style.strokeDashoffset = String(offset)
     }, 200)
   }, [demoReady, score])
+
+    // listen for lang change dispatched from Navbar toggle
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setLang((e as CustomEvent).detail as Lang)
+    }
+    window.addEventListener('meshnode_lang', handler)
+    return () => window.removeEventListener('meshnode_lang', handler)
+  }, [])
 
   // ─── SUBMIT ─────────────────────────────────────────────────────────────────
   async function handleSubmit() {
@@ -313,21 +327,6 @@ export default function AnalyseClient() {
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div ref={topRef} style={{ maxWidth: 680, margin: '0 auto', padding: '0 20px 100px' }}>
-
-      {/* ── LANG TOGGLE ── */}
-      <div style={{ display:'flex', justifyContent:'flex-end', padding:'16px 0 0', gap:2 }}>
-        {(['en','fi'] as Lang[]).map(l => (
-          <button key={l} onClick={() => setLang(l)} style={{
-            fontFamily:'var(--font-mono, monospace)', fontSize:11, letterSpacing:'0.08em',
-            padding:'4px 12px', border:'1px solid',
-            borderColor: lang === l ? 'var(--color-accent, #14b8a6)' : 'rgba(255,255,255,0.1)',
-            background: lang === l ? 'rgba(20,184,166,0.12)' : 'transparent',
-            color: lang === l ? 'var(--color-accent, #14b8a6)' : 'rgba(255,255,255,0.4)',
-            borderRadius: l === 'en' ? '6px 0 0 6px' : '0 6px 6px 0',
-            cursor:'pointer',
-          }}>{l.toUpperCase()}</button>
-        ))}
-      </div>
 
       {/* ── HERO ── */}
       <div style={{ textAlign:'center', padding:'44px 0 36px' }}>

@@ -169,7 +169,40 @@ export default function Navbar() {
         <div style={{
           display: 'flex',
           alignItems: 'center',
+          gap: 10,                     // ← change from nothing to gap: 10
         }}>
+
+          {/* EN/FI toggle — only on /analyse */}
+          {pathname.startsWith('/analyse') && (
+            <div className="cm-desktop-links" style={{ display: 'flex', gap: 2 }}>
+              {(['EN', 'FI'] as const).map(l => (
+                <button
+                  key={l}
+                  onClick={() => {
+                    const lang = l.toLowerCase()
+                    localStorage.setItem('meshnode_lang', lang)
+                    window.dispatchEvent(new CustomEvent('meshnode_lang', { detail: lang }))
+                  }}
+                  style={{
+                    padding: '6px 13px',
+                    fontSize: 11,
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    border: '1px solid',
+                    borderColor: 'rgba(20,184,166,0.35)',
+                    borderRadius: l === 'EN' ? '6px 0 0 6px' : '0 6px 6px 0',
+                    background: 'rgba(20,184,166,0.08)',
+                    color: '#14b8a6',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          )}
           {/* Desktop CTA */}
           <Link
             href="/contact"
