@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MeshNode Analysis — Cognitive Mesh Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c18;--nav-bg:rgba(8,12,24,0.95);--surface:#0d1526;--card:#111d33;--card2:#162040;
+  --border:rgba(255,255,255,0.08);--border-hi:rgba(20,184,166,0.35);
+  --text:#e2e8f0;--muted:#8892a4;--faint:#3d4a5c;
+  --teal:#14b8a6;--teal-dim:rgba(20,184,166,0.12);--teal-glow:rgba(20,184,166,0.06);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.1);
+  --green:#10b981;--green-dim:rgba(16,185,129,0.1);
+  --red:#ef4444;--red-dim:rgba(239,68,68,0.1);
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Inter',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:300;min-height:100vh;overflow-x:hidden}
+
+/* ── NAV (matches cognitivemeshlab.fi exactly) ── */
+nav{position:sticky;top:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.nav-logo img{height:28px;width:28px;object-fit:contain}
+.nav-logo-text{display:flex;flex-direction:column;line-height:1.2}
+.nav-logo-name{font-size:13px;font-weight:500;color:var(--text)}
+.nav-logo-sub{font-size:10px;color:var(--muted)}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;transition:all .2s;white-space:nowrap}
+.nav-links a:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+.nav-links a.active{color:var(--teal)}
+.nav-cta{font-size:12px;font-weight:500;color:var(--teal);border:1px solid var(--border-hi);padding:7px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;transition:all .2s}
+.nav-cta:hover{background:var(--teal-dim)}
+.nav-pill{background:var(--green-dim);color:var(--green);font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;margin-left:6px;font-family:var(--mono);letter-spacing:.05em}
+
+/* ── PAGE LAYOUT ── */
+.page-wrap{max-width:720px;margin:0 auto;padding:0 20px 120px}
+
+/* ── HERO ── */
+.hero{padding:56px 0 40px;text-align:center}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--teal);text-transform:uppercase;margin-bottom:20px;padding:5px 14px;border:1px solid var(--border-hi);border-radius:100px;background:var(--teal-glow)}
+.hero-pulse{width:5px;height:5px;background:var(--teal);border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.hero h1{font-size:clamp(28px,5vw,44px);font-weight:600;line-height:1.1;color:var(--text);margin-bottom:14px;letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--teal)}
+.hero-sub{font-size:15px;color:var(--muted);line-height:1.7;max-width:520px;margin:0 auto 24px}
+.spots-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border:1px solid rgba(16,185,129,.25);border-radius:100px;background:var(--green-dim);font-size:12px;font-weight:500;font-family:var(--mono)}
+.spots-num{color:var(--green);font-size:15px;font-weight:600}
+.spots-label{color:var(--muted)}
+
+/* ── PROGRESS ── */
+.prog-section{margin:0 0 32px}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prog-step{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.prog-pct{font-family:var(--mono);font-size:11px;color:var(--teal)}
+.prog-track{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* ── LIVE SCORE ── */
+.live-score{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:28px;transition:border-color .4s}
+.live-score.active{border-color:var(--border-hi)}
+.ls-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.ls-bar{flex:1;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.ls-fill{height:100%;background:linear-gradient(90deg,var(--teal),#06d6a0);border-radius:2px;transition:width .7s cubic-bezier(.4,0,.2,1);width:0%}
+.ls-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--teal);min-width:44px;text-align:right}
+
+/* ── STEP CARDS ── */
+.step{display:none;animation:fadeUp .35s ease both}
+.step.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.step-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.step-q{font-size:clamp(18px,3.5vw,24px);font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.25;letter-spacing:-.01em}
+.step-hint{font-size:13px;color:var(--muted);margin-bottom:20px}
+
+/* ── BUSINESS TYPE GRID ── */
+.biz-search{width:100%;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;margin-bottom:14px;transition:border-color .2s}
+.biz-search::placeholder{color:var(--faint)}
+.biz-search:focus{border-color:var(--border-hi)}
+.biz-group{margin-bottom:18px}
+.biz-group-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;padding-left:2px}
+.biz-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.biz-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--text);font-family:var(--sans);text-align:center;transition:all .2s;position:relative;overflow:hidden}
+.biz-btn::before{content:'';position:absolute;inset:0;background:var(--teal);opacity:0;transition:opacity .2s}
+.biz-btn:hover::before{opacity:.04}
+.biz-btn:hover{border-color:rgba(20,184,166,.3);transform:translateY(-1px)}
+.biz-btn.selected{border-color:var(--teal);background:var(--teal-dim)}
+.biz-btn.selected::before{opacity:0}
+.biz-btn.hidden-biz{display:none}
+.biz-icon{font-size:20px;line-height:1;position:relative;z-index:1}
+.biz-name{font-size:12px;font-weight:500;color:var(--text);line-height:1.2;position:relative;z-index:1}
+.biz-check{position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:var(--teal);display:none;align-items:center;justify-content:center}
+.biz-btn.selected .biz-check{display:flex}
+.biz-check-icon{color:#080c18;font-size:9px;font-weight:700}
+
+/* ── QUESTION TYPES ── */
+/* Single select options */
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;color:var(--text);font-family:var(--sans);font-size:14px;text-align:left;width:100%;transition:all .18s}
+.opt:hover{border-color:rgba(20,184,166,.3);background:var(--teal-glow)}
+.opt.sel{border-color:var(--teal);background:var(--teal-dim)}
+.opt-dot{width:17px;height:17px;border:1.5px solid var(--faint);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.opt.sel .opt-dot{border-color:var(--teal);background:var(--teal)}
+.opt.sel .opt-dot::after{content:'';width:5px;height:5px;background:var(--bg);border-radius:50%}
+.opt-check{width:17px;height:17px;border:1.5px solid var(--faint);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:transparent;transition:all .18s}
+.opt.sel .opt-check{border-color:var(--teal);background:var(--teal);color:#080c18}
+.opt-content{flex:1}
+.opt-title{font-size:14px;font-weight:400;color:var(--text)}
+.opt-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* Slider question */
+.slider-q{margin-bottom:20px}
+.slider-labels{display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;color:var(--muted)}
+.slider-wrap{position:relative;padding:8px 0}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--card2);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);border:3px solid var(--bg);box-shadow:0 0 0 1px var(--teal);cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+.slider-value{text-align:center;font-family:var(--mono);font-size:18px;font-weight:500;color:var(--teal);margin-top:10px}
+
+/* Rating cards */
+.rating-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.rating-card{padding:14px 6px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;text-align:center;transition:all .2s}
+.rating-card:hover{border-color:rgba(20,184,166,.3);transform:translateY(-2px)}
+.rating-card.sel{border-color:var(--teal);background:var(--teal-dim)}
+.rating-num{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--muted);transition:color .2s}
+.rating-card.sel .rating-num{color:var(--teal)}
+.rating-label{font-size:10px;color:var(--faint);margin-top:4px;transition:color .2s}
+.rating-card.sel .rating-label{color:var(--muted)}
+.rating-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--faint)}
+
+/* Multi-card select (pains/tools) */
+.multi-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mc{padding:13px 15px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all .18s;position:relative}
+.mc:hover{border-color:rgba(20,184,166,.25);background:var(--teal-glow)}
+.mc.sel{border-color:var(--teal);background:var(--teal-dim)}
+.mc-icon{font-size:15px;margin-bottom:4px}
+.mc-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.3}
+.mc-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+.mc-tick{position:absolute;top:8px;right:8px;width:14px;height:14px;border-radius:50%;background:var(--teal);display:none;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#080c18}
+.mc.sel .mc-tick{display:flex}
+
+/* Text input */
+.text-input{width:100%;padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s;margin-bottom:10px}
+.text-input::placeholder{color:var(--faint)}
+.text-input:focus{border-color:var(--border-hi)}
+.input-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:6px;display:block}
+
+/* Nav buttons */
+.btn-row{display:flex;gap:8px;margin-top:24px}
+.btn-primary{flex:1;padding:13px 22px;background:var(--teal);color:#080c18;border:none;border-radius:9px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:-.01em}
+.btn-primary:hover{background:#2dd4bf;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn-back{padding:13px 18px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:9px;font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .18s}
+.btn-back:hover{color:var(--text);border-color:rgba(255,255,255,.15)}
+
+/* ── DEMO DASHBOARD ── */
+#demo-screen{display:none;animation:fadeUp .5s ease both}
+.demo-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0;border-bottom:none}
+.demo-title{font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:.12em}
+.demo-live{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--green)}
+.demo-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1s infinite}
+.demo-body{background:var(--card);border:1px solid var(--border);border-radius:0 0 10px 10px;padding:20px}
+
+/* Score ring */
+.ring-center-wrap{display:flex;justify-content:center;margin-bottom:20px;position:relative}
+.ring-cont{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center}
+.ring-svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.ring-bg-c{fill:none;stroke:rgba(255,255,255,.05);stroke-width:7}
+.ring-fill-c{fill:none;stroke:var(--teal);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)}
+.ring-inner{text-align:center}
+.ring-score{font-family:var(--mono);font-size:30px;font-weight:500;color:var(--teal);line-height:1}
+.ring-denom{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.ring-label{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Node grid */
+.node-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.node-card{background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:14px 12px;text-align:center;position:relative;overflow:hidden}
+.node-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0}
+.node-risk::after{background:var(--red)}
+.node-opp::after{background:var(--amber)}
+.node-ready::after{background:var(--green)}
+.node-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.node-val{font-family:var(--mono);font-size:22px;font-weight:500;line-height:1}
+.node-risk .node-val{color:var(--red)}
+.node-opp .node-val{color:var(--amber)}
+.node-ready .node-val{color:var(--green)}
+.node-sub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.3}
+
+/* Insights list */
+.insight-list{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.insight-item{display:flex;gap:10px;padding:11px 14px;border-radius:8px;font-size:13px;line-height:1.5;animation:fadeUp .35s ease both}
+.insight-item.warn{background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);color:#fbbf24}
+.insight-item.info{background:var(--teal-dim);border:1px solid rgba(20,184,166,.2);color:var(--teal)}
+.insight-item.good{background:var(--green-dim);border:1px solid rgba(16,185,129,.2);color:var(--green)}
+.insight-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.insight-item.warn .insight-dot{background:var(--amber)}
+.insight-item.info .insight-dot{background:var(--teal)}
+.insight-item.good .insight-dot{background:var(--green)}
+
+/* Blur gate */
+.blur-gate{position:relative;margin-top:4px}
+.blur-inner{filter:blur(6px);opacity:.45;pointer-events:none;user-select:none;padding:16px;background:var(--card2);border:1px solid var(--border);border-radius:9px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.9}
+.blur-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,12,24,.75);border-radius:9px;border:1px solid var(--border-hi);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s}
+.blur-overlay:hover{border-color:var(--teal)}
+.blur-title{font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px;letter-spacing:-.01em}
+.blur-sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.blur-btn{padding:10px 24px;background:var(--teal);color:#080c18;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s}
+.blur-btn:hover{background:#2dd4bf}
+
+/* ── CONTACT STEP ── */
+.contact-summary{background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;padding:16px 18px;margin-bottom:20px}
+.cs-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.cs-row:last-child{border:none}
+.cs-k{color:var(--muted)}
+.cs-v{color:var(--teal);font-family:var(--mono);font-size:12px;font-weight:500}
+
+/* ── FULL REPORT (revealed after email) ── */
+#full-report{display:none;animation:fadeUp .5s ease both;margin-top:28px}
+.report-header{padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.report-title{font-size:22px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.report-meta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
+.report-section{margin-bottom:28px}
+.report-section-title{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin-bottom:12px}
+.rec-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start}
+.rec-priority{width:28px;height:28px;border-radius:50%;background:var(--teal-dim);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--teal);flex-shrink:0;margin-top:1px}
+.rec-body{}
+.rec-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.rec-impact{font-size:12px;color:var(--green);margin-bottom:3px}
+.rec-effort{font-size:12px;color:var(--muted)}
+.roi-bar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px}
+.roi-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}
+.roi-lk{color:var(--muted)}
+.roi-lv{color:var(--teal);font-family:var(--mono)}
+.roi-track{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.roi-fill{height:100%;background:linear-gradient(90deg,var(--teal),#06d6a0);border-radius:3px;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.next-steps{background:var(--teal-dim);border:1px solid var(--border-hi);border-radius:10px;padding:18px}
+.ns-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px}
+.ns-sub{font-size:13px;color:var(--muted);line-height:1.6}
+.ns-btn{display:inline-block;margin-top:14px;padding:10px 22px;background:var(--teal);color:#080c18;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer;border:none}
+.submit-msg{font-size:12px;color:var(--muted);margin-top:8px;font-family:var(--mono)}
+.submit-msg.ok{color:var(--green)}
+.submit-msg.err{color:var(--red)}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:48px 24px 32px;margin-top:60px}
+.footer-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px}
+.footer-brand img{height:28px;margin-bottom:12px}
+.footer-brand-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.footer-tagline{font-size:12px;color:var(--muted);line-height:1.6;max-width:200px}
+.footer-col-title{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+.footer-col a{display:block;font-size:13px;color:var(--muted);text-decoration:none;margin-bottom:7px;transition:color .2s}
+.footer-col a:hover{color:var(--text)}
+.footer-bottom{max-width:1100px;margin:28px auto 0;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--faint)}
+.footer-tech{display:flex;gap:8px}
+.tech-tag{padding:3px 8px;border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+/* ── LANG TOGGLE ── */
+.lang-toggle{display:flex;gap:2px;position:absolute;right:170px;top:50%;transform:translateY(-50%)}
+.lt-btn{font-size:10px;font-weight:500;letter-spacing:.08em;padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s}
+.lt-btn:first-child{border-radius:5px 0 0 5px}
+.lt-btn:last-child{border-radius:0 5px 5px 0}
+.lt-btn.active{background:var(--teal-dim);color:var(--teal);border-color:var(--border-hi)}
+
+@media(max-width:600px){
+  .nav-links{display:none}
+  .lang-toggle{right:80px}
+  .biz-grid{grid-template-columns:repeat(2,1fr)}
+  .node-grid{grid-template-columns:repeat(3,1fr)}
+  .footer-inner{grid-template-columns:1fr 1fr}
+  .multi-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV (exact match to cognitivemeshlab.fi) ── -->
+<nav>
+  <a href="https://cognitivemeshlab.fi" class="nav-logo">
+    <img src="https://cognitivemeshlab.fi/logo.png" alt="Cognitive Mesh Lab" onerror="this.style.display='none'">
+    <div class="nav-logo-text">
+      <span class="nav-logo-name">Cognitive Mesh Lab</span>
+      <span class="nav-logo-sub">Oulu · Finland</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="https://cognitivemeshlab.fi">Home</a>
+    <a href="https://cognitivemeshlab.fi/research/">Research</a>
+    <a href="https://cognitivemeshlab.fi/lab/">Lab</a>
+    <a href="#" class="active">Analyse <span class="nav-pill">NEW</span></a>
+    <a href="https://cognitivemeshlab.fi/learn/">Learn</a>
+    <a href="https://cognitivemeshlab.fi/projects/">Projects</a>
+    <a href="https://cognitivemeshlab.fi/blog/">Blog</a>
+  </div>
+  <div class="lang-toggle">
+    <button class="lt-btn active" id="lEN" onclick="setLang('en')">EN</button>
+    <button class="lt-btn" id="lFI" onclick="setLang('fi')">FI</button>
+  </div>
+  <a href="https://cognitivemeshlab.fi/contact/" class="nav-cta">Hire / Collaborate</a>
+</nav>
+
+<!-- ── PAGE ── -->
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag"><div class="hero-pulse"></div><span data-en="MeshNode — AI Business Intelligence" data-fi="MeshNode — Tekoäly liiketoimintatiedustelu">MeshNode — AI Business Intelligence</span></div>
+    <h1 data-en="Is your Oulu business<br>leaving <em>money on the table?</em>" data-fi="Jättääkö Oulu-yrityksesi<br><em>rahaa pöydälle?</em>">Is your Oulu business<br>leaving <em>money on the table?</em></h1>
+    <p class="hero-sub" data-en="A 6-question intelligent assessment built on the same AI agent architecture that powers the MeshNode platform. Get a real analysis — not a generic report." data-fi="6-kysymyksen älykäs arviointi, joka on rakennettu samalle tekoälyarkkitehtuurille kuin MeshNode-alusta. Saat todellisen analyysin — ei yleistä raporttia.">A 6-question intelligent assessment built on the same AI agent architecture that powers the MeshNode platform. Get a real analysis — not a generic report.</p>
+    <div class="spots-badge">
+      <span class="spots-num" id="spotsCounter">5</span>
+      <span class="spots-label" data-en="free on-site analyses remaining this month" data-fi="ilmaista paikan päällä analyysiä jäljellä tässä kuussa">free on-site analyses remaining this month</span>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="prog-section">
+    <div class="prog-top">
+      <span class="prog-step" id="progLabel">Step 1 of 6</span>
+      <span class="prog-pct" id="progPct">0%</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- LIVE SCORE -->
+  <div class="live-score" id="liveScore">
+    <span class="ls-label" data-en="AI opportunity score" data-fi="Tekoälymahdollisuuspisteet">AI opportunity score</span>
+    <div class="ls-bar"><div class="ls-fill" id="lsFill"></div></div>
+    <span class="ls-val" id="lsVal">—</span>
+  </div>
+
+  <!-- ── STEP 1: BUSINESS TYPE ── -->
+  <div class="step active" id="s1">
+    <div class="step-label" data-en="Step 1 of 6 — your business" data-fi="Vaihe 1/6 — yrityksesi">Step 1 of 6 — your business</div>
+    <div class="step-q" data-en="What type of business do you run?" data-fi="Minkä tyyppistä yritystä pyörität?">What type of business do you run?</div>
+    <div class="step-hint" data-en="Search or browse — tap to select" data-fi="Hae tai selaa — napauta valitaksesi">Search or browse — tap to select</div>
+    <input class="biz-search" id="bizSearch" placeholder="Search your business type…" oninput="filterBiz(this.value)">
+
+    <div class="biz-group" data-group="fb">
+      <div class="biz-group-label" data-en="Food & Beverage" data-fi="Ruoka ja juoma">Food & Beverage</div>
+      <div class="biz-grid">
+        <button class="biz-btn" onclick="pickBiz(this,'cafe')" data-biz="cafe" data-en="Café" data-fi="Kahvila"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">☕</span><span class="biz-name" data-en="Café" data-fi="Kahvila">Café</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'fine_dining')" data-biz="fine_dining" data-en="Fine dining" data-fi="Fine dining"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🍽</span><span class="biz-name" data-en="Fine dining" data-fi="Fine dining">Fine dining</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'restaurant')" data-biz="restaurant"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🍴</span><span class="biz-name" data-en="Restaurant" data-fi="Ravintola">Restaurant</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'takeaway')" data-biz="takeaway"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">📦</span><span class="biz-name" data-en="Takeaway" data-fi="Pikaruoka">Takeaway</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'food_truck')" data-biz="food_truck"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🚚</span><span class="biz-name" data-en="Food truck" data-fi="Food truck">Food truck</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'bar')" data-biz="bar"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🍺</span><span class="biz-name" data-en="Bar / pub" data-fi="Baari">Bar / pub</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'bakery')" data-biz="bakery"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🥐</span><span class="biz-name" data-en="Bakery" data-fi="Leipomo">Bakery</span></button>
+      </div>
+    </div>
+
+    <div class="biz-group" data-group="bw">
+      <div class="biz-group-label" data-en="Beauty & Wellness" data-fi="Kauneus ja hyvinvointi">Beauty & Wellness</div>
+      <div class="biz-grid">
+        <button class="biz-btn" onclick="pickBiz(this,'hair_salon')" data-biz="hair_salon"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">💇</span><span class="biz-name" data-en="Hair salon" data-fi="Kampaamo">Hair salon</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'barber')" data-biz="barber"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">✂</span><span class="biz-name" data-en="Barber" data-fi="Parturi">Barber</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'nail_salon')" data-biz="nail_salon"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">💅</span><span class="biz-name" data-en="Nail salon" data-fi="Kynsihoitola">Nail salon</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'spa')" data-biz="spa"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🧖</span><span class="biz-name" data-en="Spa & massage" data-fi="Spa / hieronta">Spa & massage</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'tattoo')" data-biz="tattoo"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🎨</span><span class="biz-name" data-en="Tattoo studio" data-fi="Tatuointistudio">Tattoo studio</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'gym')" data-biz="gym"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🏋</span><span class="biz-name" data-en="Gym / fitness" data-fi="Kuntosali">Gym / fitness</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'dance_school')" data-biz="dance_school"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">💃</span><span class="biz-name" data-en="Dance school" data-fi="Tanssikoulu">Dance school</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'yoga')" data-biz="yoga"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🧘</span><span class="biz-name" data-en="Yoga studio" data-fi="Joogastudio">Yoga studio</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'beauty_clinic')" data-biz="beauty_clinic"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">✨</span><span class="biz-name" data-en="Beauty clinic" data-fi="Kauneusklinikka">Beauty clinic</span></button>
+      </div>
+    </div>
+
+    <div class="biz-group" data-group="rt">
+      <div class="biz-group-label" data-en="Retail" data-fi="Vähittäiskauppa">Retail</div>
+      <div class="biz-grid">
+        <button class="biz-btn" onclick="pickBiz(this,'clothing')" data-biz="clothing"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">👗</span><span class="biz-name" data-en="Clothing" data-fi="Vaatteet">Clothing</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'grocery')" data-biz="grocery"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🛒</span><span class="biz-name" data-en="Grocery store" data-fi="Ruokakauppa">Grocery store</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'hobby_shop')" data-biz="hobby_shop"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🎮</span><span class="biz-name" data-en="Hobby / specialist" data-fi="Harrasteliike">Hobby / specialist</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'electronics')" data-biz="electronics"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">📱</span><span class="biz-name" data-en="Electronics" data-fi="Elektroniikka">Electronics</span></button>
+      </div>
+    </div>
+
+    <div class="biz-group" data-group="sv">
+      <div class="biz-group-label" data-en="Services" data-fi="Palvelut">Services</div>
+      <div class="biz-grid">
+        <button class="biz-btn" onclick="pickBiz(this,'cleaning')" data-biz="cleaning"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🧹</span><span class="biz-name" data-en="Cleaning" data-fi="Siivous">Cleaning</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'auto_repair')" data-biz="auto_repair"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🔧</span><span class="biz-name" data-en="Auto repair" data-fi="Autokorjaamo">Auto repair</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'childcare')" data-biz="childcare"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🧒</span><span class="biz-name" data-en="Childcare" data-fi="Lastenhoito">Childcare</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'accounting')" data-biz="accounting"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">📊</span><span class="biz-name" data-en="Accounting" data-fi="Tilitoimisto">Accounting</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'it_support')" data-biz="it_support"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">💻</span><span class="biz-name" data-en="IT support" data-fi="IT-tuki">IT support</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'construction')" data-biz="construction"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🏗</span><span class="biz-name" data-en="Construction" data-fi="Rakentaminen">Construction</span></button>
+        <button class="biz-btn" onclick="pickBiz(this,'logistics')" data-biz="logistics"><div class="biz-check"><span class="biz-check-icon">✓</span></div><span class="biz-icon">🚛</span><span class="biz-name" data-en="Logistics" data-fi="Logistiikka">Logistics</span></button>
+      </div>
+    </div>
+
+    <div class="btn-row"><button class="btn-primary" id="btn1" onclick="goTo(2)" disabled data-en="Continue →" data-fi="Jatka →">Continue →</button></div>
+  </div>
+
+  <!-- ── STEP 2: SIZE + REVENUE ── -->
+  <div class="step" id="s2">
+    <div class="step-label" data-en="Step 2 of 6 — your scale" data-fi="Vaihe 2/6 — mittakaavasi">Step 2 of 6 — your scale</div>
+    <div class="step-q" data-en="How many people work here?" data-fi="Kuinka monta ihmistä täällä työskentelee?">How many people work here?</div>
+    <div class="opts" id="q2-opts">
+      <button class="opt" onclick="pick1(this,'q2',0.5)" data-val="solo"><span class="opt-dot"></span><div class="opt-content"><div class="opt-title" data-en="Just me — solo operator" data-fi="Vain minä — yksinyrittäjä">Just me — solo operator</div></div></button>
+      <button class="opt" onclick="pick1(this,'q2',1.2)" data-val="2-5"><span class="opt-dot"></span><div class="opt-content"><div class="opt-title" data-en="2–5 people" data-fi="2–5 henkilöä">2–5 people</div></div></button>
+      <button class="opt" onclick="pick1(this,'q2',2)" data-val="6-20"><span class="opt-dot"></span><div class="opt-content"><div class="opt-title" data-en="6–20 people" data-fi="6–20 henkilöä">6–20 people</div></div></button>
+      <button class="opt" onclick="pick1(this,'q2',2.5)" data-val="20-50"><span class="opt-dot"></span><div class="opt-content"><div class="opt-title" data-en="20–50 people" data-fi="20–50 henkilöä">20–50 people</div></div></button>
+      <button class="opt" onclick="pick1(this,'q2',3)" data-val="50plus"><span class="opt-dot"></span><div class="opt-content"><div class="opt-title" data-en="More than 50" data-fi="Yli 50">More than 50</div></div></button>
+    </div>
+    <div style="margin-top:24px">
+      <div class="step-q" style="font-size:18px" data-en="Estimated monthly revenue (€)" data-fi="Arvioitu kuukausitulo (€)">Estimated monthly revenue (€)</div>
+      <div class="step-hint" data-en="Drag the slider — we use this to calculate your AI ROI potential" data-fi="Vedä liukusäädintä — käytämme tätä tekoälyn tuottopotentiaalin laskemiseen">Drag the slider — we use this to calculate your AI ROI potential</div>
+      <div class="slider-labels">
+        <span data-en="Under €5K" data-fi="Alle 5 000 €">Under €5K</span>
+        <span data-en="€50K+" data-fi="50 000 €+">€50K+</span>
+      </div>
+      <input type="range" id="revenueSlider" min="1" max="10" value="3" step="1" oninput="updateRevenue(this.value)">
+      <div class="slider-value" id="revenueVal">€5K–€10K / month</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goTo(1)" data-en="Back" data-fi="Takaisin">Back</button>
+      <button class="btn-primary" id="btn2" onclick="goTo(3)" disabled data-en="Continue →" data-fi="Jatka →">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: PAIN POINTS ── -->
+  <div class="step" id="s3">
+    <div class="step-label" data-en="Step 3 of 6 — your pain points" data-fi="Vaihe 3/6 — kipupisteet">Step 3 of 6 — your pain points</div>
+    <div class="step-q" id="q3-title" data-en="What costs you the most?" data-fi="Mikä maksaa sinulle eniten?">What costs you the most?</div>
+    <div class="step-hint" data-en="Select everything that applies — be honest, this drives your analysis" data-fi="Valitse kaikki sopivat — ole rehellinen, tämä ohjaa analyysiäsi">Select everything that applies — be honest, this drives your analysis</div>
+    <div class="multi-grid" id="q3-grid"></div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goTo(2)" data-en="Back" data-fi="Takaisin">Back</button>
+      <button class="btn-primary" id="btn3" onclick="goTo(4)" disabled data-en="Continue →" data-fi="Jatka →">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: RATE EACH PAIN ── -->
+  <div class="step" id="s4">
+    <div class="step-label" data-en="Step 4 of 6 — severity rating" data-fi="Vaihe 4/6 — vakavuusarvio">Step 4 of 6 — severity rating</div>
+    <div class="step-q" data-en="How severe is each problem? (1 = minor, 5 = critical)" data-fi="Kuinka vakavia ongelmat ovat? (1 = pieni, 5 = kriittinen)">How severe is each problem? (1 = minor, 5 = critical)</div>
+    <div class="step-hint" data-en="This calibrates your risk score precisely" data-fi="Tämä kalibroi riskipisteytyksen tarkasti">This calibrates your risk score precisely</div>
+    <div id="q4-ratings"></div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goTo(3)" data-en="Back" data-fi="Takaisin">Back</button>
+      <button class="btn-primary" id="btn4" onclick="goTo(5)" data-en="Continue →" data-fi="Jatka →">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 5: CURRENT TOOLS + READINESS ── -->
+  <div class="step" id="s5">
+    <div class="step-label" data-en="Step 5 of 6 — your setup" data-fi="Vaihe 5/6 — nykyinen tilanne">Step 5 of 6 — your setup</div>
+    <div class="step-q" data-en="What systems do you currently use?" data-fi="Mitä järjestelmiä käytät tällä hetkellä?">What systems do you currently use?</div>
+    <div class="multi-grid" id="q5-grid"></div>
+    <div style="margin-top:24px">
+      <div class="step-q" style="font-size:18px" data-en="How ready are you for AI? (1 = not at all, 10 = very ready)" data-fi="Kuinka valmis olet tekoälyyn? (1 = ei lainkaan, 10 = erittäin valmis)">How ready are you for AI? (1 = not at all, 10 = very ready)</div>
+      <div class="rating-grid" id="readinessRating">
+        <div class="rating-card" onclick="pickRating(this,'readiness')" data-val="1"><div class="rating-num">1</div></div>
+        <div class="rating-card" onclick="pickRating(this,'readiness')" data-val="3"><div class="rating-num">3</div></div>
+        <div class="rating-card" onclick="pickRating(this,'readiness')" data-val="5"><div class="rating-num">5</div></div>
+        <div class="rating-card" onclick="pickRating(this,'readiness')" data-val="7"><div class="rating-num">7</div></div>
+        <div class="rating-card" onclick="pickRating(this,'readiness')" data-val="10"><div class="rating-num">10</div></div>
+      </div>
+      <div class="rating-ends"><span data-en="Not ready" data-fi="Ei valmis">Not ready</span><span data-en="Very ready" data-fi="Erittäin valmis">Very ready</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goTo(4)" data-en="Back" data-fi="Takaisin">Back</button>
+      <button class="btn-primary" id="btn5" onclick="showDemo()" disabled data-en="See my analysis →" data-fi="Näytä analyysini →">See my analysis →</button>
+    </div>
+  </div>
+
+  <!-- ── DEMO DASHBOARD ── -->
+  <div id="demo-screen">
+    <div class="demo-topbar">
+      <div class="demo-title">MESHNODE // LIVE ANALYSIS ENGINE</div>
+      <div class="demo-live"><div class="demo-dot"></div>PROCESSING</div>
+    </div>
+    <div class="demo-body">
+      <div class="ring-center-wrap">
+        <div class="ring-cont">
+          <svg class="ring-svg" width="120" height="120" viewBox="0 0 120 120">
+            <circle class="ring-bg-c" cx="60" cy="60" r="50"/>
+            <circle class="ring-fill-c" id="ringArc" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="ring-inner">
+            <div class="ring-score" id="ringScore">0.0</div>
+            <div class="ring-denom">/10</div>
+          </div>
+        </div>
+      </div>
+      <div class="ring-label" style="text-align:center;margin-top:-12px;margin-bottom:20px" id="ringLabel">Calculating…</div>
+
+      <div class="node-grid">
+        <div class="node-card node-risk">
+          <div class="node-lbl">RISK</div>
+          <div class="node-val" id="nodeRisk">—</div>
+          <div class="node-sub" id="nodeRiskSub">scanning…</div>
+        </div>
+        <div class="node-card node-opp">
+          <div class="node-lbl">OPPORTUNITY</div>
+          <div class="node-val" id="nodeOpp">—</div>
+          <div class="node-sub" id="nodeOppSub">scanning…</div>
+        </div>
+        <div class="node-card node-ready">
+          <div class="node-lbl">READINESS</div>
+          <div class="node-val" id="nodeReady">—</div>
+          <div class="node-sub" id="nodeReadySub">scanning…</div>
+        </div>
+      </div>
+
+      <div class="insight-list" id="insightList"></div>
+
+      <div class="blur-gate">
+        <div class="blur-inner">
+── FULL MESHNODE ANALYSIS REPORT ─────────────────────<br>
+Recommendation_01 [CRITICAL]: Revenue recovery action…<br>
+Recommendation_02 [HIGH]: Automation opportunity…<br>
+Recommendation_03 [MEDIUM]: Customer retention…<br>
+ROI Forecast — 90 days: €X,XXX recoverable…<br>
+ROI Forecast — 12 months: €XX,XXX potential…<br>
+Implementation roadmap: Phase 1 (Week 1–4)…<br>
+Phase 2 (Month 2–3): Agent deployment…<br>
+───────────────────────────────────────────────────</div>
+        <div class="blur-overlay" onclick="unlockReport()">
+          <div class="blur-title" data-en="Your full report is ready" data-fi="Koko raporttisi on valmis">Your full report is ready</div>
+          <div class="blur-sub" data-en="Includes prioritised recommendations, 90-day roadmap, and ROI forecast specific to your business." data-fi="Sisältää priorisoidut suositukset, 90 päivän tiekartan ja liiketoimintakohtaisen tuottoennusteen.">Includes prioritised recommendations, 90-day roadmap, and ROI forecast specific to your business.</div>
+          <button class="blur-btn" data-en="Unlock full report →" data-fi="Avaa koko raportti →">Unlock full report →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 6: CONTACT ── -->
+  <div class="step" id="s6">
+    <div class="step-label" data-en="Step 6 of 6 — unlock your report" data-fi="Vaihe 6/6 — avaa raporttisi">Step 6 of 6 — unlock your report</div>
+    <div class="step-q" data-en="Where should we deliver your analysis?" data-fi="Mihin toimitamme analyysisi?">Where should we deliver your analysis?</div>
+    <div class="step-hint" data-en="Your full report appears immediately below after you submit." data-fi="Koko raporttisi ilmestyy suoraan alle lähettämisen jälkeen.">Your full report appears immediately below after you submit.</div>
+
+    <div class="contact-summary" id="contactSummary"></div>
+
+    <label class="input-label" data-en="Your name" data-fi="Nimesi">Your name</label>
+    <input class="text-input" id="iName" placeholder="Matti Virtanen" oninput="chkContact()">
+    <label class="input-label" data-en="Business name" data-fi="Yrityksen nimi">Business name</label>
+    <input class="text-input" id="iBiz" placeholder="Ravintola Pohjoinen" oninput="chkContact()">
+    <label class="input-label" data-en="Email address" data-fi="Sähköpostiosoite">Email address</label>
+    <input class="text-input" id="iEmail" type="email" placeholder="matti@yrityksesi.fi" oninput="chkContact()">
+    <label class="input-label" data-en="Phone (optional)" data-fi="Puhelin (valinnainen)">Phone (optional)</label>
+    <input class="text-input" id="iPhone" type="tel" placeholder="+358 40 123 4567">
+
+    <p style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:4px" data-en="GDPR compliant · your data stays with Cognitive Mesh Lab only · no spam" data-fi="GDPR-yhteensopiva · tietosi pysyvät vain Cognitive Mesh Labilla · ei roskapostia">GDPR compliant · your data stays with Cognitive Mesh Lab only · no spam</p>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="unlockReport()" data-en="Back" data-fi="Takaisin">Back</button>
+      <button class="btn-primary" id="btn6" onclick="submitForm()" disabled data-en="Unlock full report →" data-fi="Avaa koko raportti →">Unlock full report →</button>
+    </div>
+    <div class="submit-msg" id="submitMsg"></div>
+  </div>
+
+  <!-- ── FULL REPORT (revealed after email) ── -->
+  <div id="full-report">
+    <div class="report-header">
+      <div class="report-title" id="reportTitle">MeshNode Analysis Report</div>
+      <div class="report-meta" id="reportMeta">Cognitive Mesh Lab · Oulu · <span id="reportDate"></span></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title" data-en="SCORE BREAKDOWN" data-fi="PISTEIDEN ERITTELY">SCORE BREAKDOWN</div>
+      <div id="reportScores"></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title" data-en="ROI POTENTIAL" data-fi="TUOTTOPOTENTIAALI">ROI POTENTIAL</div>
+      <div id="reportROI"></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title" data-en="PRIORITISED RECOMMENDATIONS" data-fi="PRIORISOIDUT SUOSITUKSET">PRIORITISED RECOMMENDATIONS</div>
+      <div id="reportRecs"></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title" data-en="90-DAY IMPLEMENTATION ROADMAP" data-fi="90 PÄIVÄN TOTEUTUSSUUNNITELMA">90-DAY IMPLEMENTATION ROADMAP</div>
+      <div id="reportRoadmap"></div>
+    </div>
+
+    <div class="next-steps">
+      <div class="ns-title" data-en="You're confirmed for a free on-site MeshAudit" data-fi="Olet vahvistettu ilmaiselle paikan päällä tehtävälle MeshAuditille">You're confirmed for a free on-site MeshAudit</div>
+      <div class="ns-sub" data-en="Stanley will visit your location in Oulu, connect to your existing data systems, and run a live MeshNode demo on your actual business data. We identify your top 3 highest-ROI automations and hand you a concrete implementation plan." data-fi="Stanley vierailee toimipaikassasi Oulussa, yhdistää olemassa oleviin tietojärjestelmiisi ja ajaa live MeshNode-demon todellisilla liiketoimintatiedoillasi.">Stanley will visit your location in Oulu, connect to your existing data systems, and run a live MeshNode demo on your actual business data. We identify your top 3 highest-ROI automations and hand you a concrete implementation plan.</div>
+      <a href="https://cognitivemeshlab.fi/contact/" class="ns-btn" data-en="Contact to schedule →" data-fi="Ota yhteyttä aikataulutusta varten →">Contact to schedule →</a>
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<!-- ── FOOTER (matches cognitivemeshlab.fi exactly) ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="https://cognitivemeshlab.fi/logo.png" alt="Cognitive Mesh Lab" onerror="this.style.display='none'">
+      <div class="footer-brand-name">Cognitive Mesh Lab</div>
+      <div class="footer-tagline">Emergent collective intelligence at the 5G edge. Research → Products → Community.</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--faint)">Oulu, Finland 🇫🇮</div>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">RESEARCH</div>
+      <a href="https://cognitivemeshlab.fi/research/">PhD Proposal</a>
+      <a href="https://cognitivemeshlab.fi/research/#publications">Publications</a>
+      <a href="https://cognitivemeshlab.fi/projects/">Open Source</a>
+      <a href="https://cognitivemeshlab.fi/blog/">Lab Notes</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">LAB & VENTURE</div>
+      <a href="https://cognitivemeshlab.fi/lab/">Vision & Roadmap</a>
+      <a href="https://cognitivemeshlab.fi/lab/#products">Products</a>
+      <a href="https://cognitivemeshlab.fi/contact/#services">Services</a>
+      <a href="https://cognitivemeshlab.fi/lab/#roadmap">Toiminimi → Oy</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">CONNECT</div>
+      <a href="https://www.youtube.com/@CognitiveMeshLab" target="_blank">YouTube ↗</a>
+      <a href="https://github.com/cognitive-mesh-lab" target="_blank">GitHub ↗</a>
+      <a href="https://www.linkedin.com/company/cognitive-mesh-lab" target="_blank">LinkedIn ↗</a>
+      <a href="mailto:stanley@cognitivemeshlab.fi">Email</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Stanley Ogechi Amaechi — Cognitive Mesh Lab (Toiminimi, Oulu)</span>
+    <div class="footer-tech">
+      <span class="tech-tag">Rust</span>
+      <span class="tech-tag">Next.js</span>
+      <span class="tech-tag">University of Oulu</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const SB_URL  = 'https://tkpbfnctkcdhkloriaqm.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcGJmbmN0a2NkaGtsb3JpYXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NTc2NTMsImV4cCI6MjA4OTQzMzY1M30.oMrDZpiQFnFPuigcqrdtQHpSw2-EpTcQkK1DbwzwoPo';
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let lang='en', cur=1;
+const A={bizType:null,size:null,revenue:3,pains:[],painRatings:{},tools:[],readiness:null};
+let scoreVal=0;
+
+// ── BIZ DATA ──────────────────────────────────────────────────────────────
+const BIZ_NAMES={
+  cafe:{en:'Café',fi:'Kahvila'},fine_dining:{en:'Fine dining',fi:'Fine dining'},
+  restaurant:{en:'Restaurant',fi:'Ravintola'},takeaway:{en:'Takeaway',fi:'Pikaruoka'},
+  food_truck:{en:'Food truck',fi:'Food truck'},bar:{en:'Bar / pub',fi:'Baari'},
+  bakery:{en:'Bakery',fi:'Leipomo'},hair_salon:{en:'Hair salon',fi:'Kampaamo'},
+  barber:{en:'Barber',fi:'Parturi'},nail_salon:{en:'Nail salon',fi:'Kynsihoitola'},
+  spa:{en:'Spa',fi:'Spa'},tattoo:{en:'Tattoo studio',fi:'Tatuointistudio'},
+  gym:{en:'Gym',fi:'Kuntosali'},dance_school:{en:'Dance school',fi:'Tanssikoulu'},
+  yoga:{en:'Yoga',fi:'Jooga'},beauty_clinic:{en:'Beauty clinic',fi:'Kauneusklinikka'},
+  clothing:{en:'Clothing',fi:'Vaatteet'},grocery:{en:'Grocery',fi:'Ruokakauppa'},
+  hobby_shop:{en:'Hobby shop',fi:'Harrasteliike'},electronics:{en:'Electronics',fi:'Elektroniikka'},
+  cleaning:{en:'Cleaning',fi:'Siivous'},auto_repair:{en:'Auto repair',fi:'Autokorjaamo'},
+  childcare:{en:'Childcare',fi:'Lastenhoito'},accounting:{en:'Accounting',fi:'Tilitoimisto'},
+  it_support:{en:'IT support',fi:'IT-tuki'},construction:{en:'Construction',fi:'Rakennus'},
+  logistics:{en:'Logistics',fi:'Logistiikka'},
+};
+
+const PAINS={
+  fb:[
+    {v:'waste',icon:'🗑',en:'Food & ingredient waste',fi:'Ruoka- ja raaka-ainehävikki',sub_en:'Daily over-prep and end-of-day losses',sub_fi:'Ylivalmistelu ja päivän lopun hävikki'},
+    {v:'staffing',icon:'👥',en:'Staffing & scheduling',fi:'Henkilöstö ja aikataulut',sub_en:'Over or understaffed on wrong days',sub_fi:'Väärät henkilöstömäärät väärille päiville'},
+    {v:'slowdays',icon:'📉',en:'Unpredictable slow days',fi:'Arvaamattomat hiljaiset päivät',sub_en:"Can't plan ahead — revenue varies too much",sub_fi:'Ei pysty suunnittelemaan — tulot vaihtelevat liikaa'},
+    {v:'margins',icon:'💰',en:'Unknown dish profitability',fi:'Tuntematon annosten kannattavuus',sub_en:"Don't know which dishes lose money",sub_fi:'Ei tiedä mitkä annokset tuottavat tappiota'},
+    {v:'equipment',icon:'⚙️',en:'Equipment failures',fi:'Laiterikot',sub_en:'Breakdowns always a surprise',sub_fi:'Rikkoontuminen yllättää aina'},
+    {v:'customers',icon:'🔄',en:'Customer retention',fi:'Asiakkaiden pitäminen',sub_en:'Regulars leaving without notice',sub_fi:'Kanta-asiakkaat lähtevät huomaamatta'},
+    {v:'noshows',icon:'🚫',en:'No-shows & cancellations',fi:'Ilmestymättä jättämiset',sub_en:'Wasted covers and lost revenue',sub_fi:'Tuhlatut pöytäpaikat ja kadonneet tulot'},
+  ],
+  bw:[
+    {v:'noshows',icon:'🚫',en:'No-shows & last-minute cancellations',fi:'Ilmestymättä jättämiset',sub_en:'Wasted appointment slots',sub_fi:'Tuhlatut aikaslotit'},
+    {v:'rebooking',icon:'🔄',en:'Low rebooking rate',fi:'Alhainen uudelleenvarausaste',sub_en:'Clients not returning after first visit',sub_fi:'Asiakkaat eivät palaa ensimmäisen käynnin jälkeen'},
+    {v:'products',icon:'🧴',en:'Retail product sales',fi:'Tuotemyynti',sub_en:'Inconsistent upselling of products',sub_fi:'Epäjohdonmukainen lisämyynti'},
+    {v:'scheduling',icon:'📅',en:'Staff scheduling gaps',fi:'Henkilöstöaikataulujen aukot',sub_en:'Double bookings or idle time',sub_fi:'Kaksoisbukkausta tai joutilasta aikaa'},
+    {v:'loyalty',icon:'⭐',en:'Client loyalty & retention',fi:'Asiakasuskollisuus',sub_en:'Building long-term regulars',sub_fi:'Pitkäaikaisten kanta-asiakkaiden rakentaminen'},
+    {v:'marketing',icon:'📢',en:'New client acquisition',fi:'Uusien asiakkaiden hankinta',sub_en:'No system beyond word of mouth',sub_fi:'Ei järjestelmää suosittelun lisäksi'},
+  ],
+  rt:[
+    {v:'inventory',icon:'📦',en:'Inventory management',fi:'Varastonhallinta',sub_en:'Overstock or stockouts hurting margins',sub_fi:'Ylivarasto tai loppuunmyynti heikentää katteita'},
+    {v:'demand',icon:'📊',en:'Demand forecasting',fi:'Kysynnän ennustaminen',sub_en:"Can't predict what will sell",sub_fi:'Ei pysty ennustamaan mitä myy'},
+    {v:'footfall',icon:'🚶',en:'Customer footfall',fi:'Asiakasvirta',sub_en:'Inconsistent traffic to the store',sub_fi:'Epäjohdonmukainen asiakasvirta myymälään'},
+    {v:'returns',icon:'↩️',en:'High return rate',fi:'Korkea palautusaste',sub_en:'Returns eating into profit margins',sub_fi:'Palautukset syövät katteita'},
+    {v:'pricing',icon:'💲',en:'Pricing strategy',fi:'Hinnoittelustrategia',sub_en:'Pricing feels like guesswork',sub_fi:'Hinnoittelu tuntuu arvaukselta'},
+  ],
+  sv:[
+    {v:'scheduling',icon:'📅',en:'Scheduling & routing',fi:'Aikataulutus ja reititys',sub_en:'Inefficient job or route planning',sub_fi:'Tehoton työ- tai reittisuunnittelu'},
+    {v:'staff',icon:'👥',en:'Staff reliability & turnover',fi:'Henkilöstön luotettavuus',sub_en:'High churn and reliability issues',sub_fi:'Suuri vaihtuvuus ja luotettavuusongelmat'},
+    {v:'invoicing',icon:'💳',en:'Invoicing & cash flow',fi:'Laskutus ja kassavirta',sub_en:'Late payments and collection delays',sub_fi:'Myöhäiset maksut ja perintäviiveet'},
+    {v:'clients',icon:'🔄',en:'Client retention',fi:'Asiakasuskollisuus',sub_en:'Losing clients without early warning',sub_fi:'Asiakkaiden menettäminen ilman varoitusta'},
+    {v:'quotes',icon:'📝',en:'Quoting & estimation',fi:'Tarjouslaskenta',sub_en:'Too slow or too often wrong',sub_fi:'Liian hidas tai usein väärä'},
+    {v:'admin',icon:'🗂',en:'Admin overload',fi:'Hallintoylikuormitus',sub_en:'Too much time on paperwork',sub_fi:'Liikaa aikaa paperitöihin'},
+  ],
+};
+
+const TOOLS={
+  fb:[
+    {v:'restolution',en:'Restolution POS',fi:'Restolution POS'},
+    {v:'tableonline',en:'TableOnline / Eatapp',fi:'TableOnline / Eatapp'},
+    {v:'izettle',en:'iZettle / Zettle',fi:'iZettle / Zettle'},
+    {v:'wolt',en:'Wolt for Business',fi:'Wolt yrityksille'},
+    {v:'excel',en:'Excel / spreadsheets',fi:'Excel / taulukkolaskennat'},
+    {v:'nothing',en:'No digital systems',fi:'Ei digitaalisia järjestelmiä'},
+  ],
+  bw:[
+    {v:'timma',en:'Timma / Fresha',fi:'Timma / Fresha'},
+    {v:'treatwell',en:'Treatwell / Booksy',fi:'Treatwell / Booksy'},
+    {v:'instagram',en:'Instagram only',fi:'Vain Instagram'},
+    {v:'excel',en:'Excel / manual',fi:'Excel / manuaalinen'},
+    {v:'nothing',en:'No booking system',fi:'Ei varausjärjestelmää'},
+  ],
+  rt:[
+    {v:'shopify',en:'Shopify / WooCommerce',fi:'Shopify / WooCommerce'},
+    {v:'erp',en:'ERP / inventory system',fi:'ERP / varastojärjestelmä'},
+    {v:'pos',en:'POS system',fi:'Kassajärjestelmä'},
+    {v:'excel',en:'Excel / manual',fi:'Excel / manuaalinen'},
+    {v:'nothing',en:'No systems',fi:'Ei järjestelmiä'},
+  ],
+  sv:[
+    {v:'jobber',en:'Jobber / field service app',fi:'Jobber / kenttäpalvelusovellus'},
+    {v:'erp',en:'ERP / business system',fi:'ERP / toiminnanohjaus'},
+    {v:'excel',en:'Excel / manual',fi:'Excel / manuaalinen'},
+    {v:'whatsapp',en:'WhatsApp coordination',fi:'WhatsApp koordinointi'},
+    {v:'nothing',en:'No systems',fi:'Ei järjestelmiä'},
+  ],
+};
+
+function getSector(biz){
+  const fb=['cafe','fine_dining','restaurant','takeaway','food_truck','bar','bakery'];
+  const bw=['hair_salon','barber','nail_salon','spa','tattoo','gym','dance_school','yoga','beauty_clinic'];
+  const rt=['clothing','grocery','hobby_shop','electronics'];
+  if(fb.includes(biz)) return 'fb';
+  if(bw.includes(biz)) return 'bw';
+  if(rt.includes(biz)) return 'rt';
+  return 'sv';
+}
+
+const REVENUE_LABELS=['Under €2K','€2K–€5K','€5K–€10K','€10K–€20K','€20K–€35K','€35K–€50K','€50K–€75K','€75K–€100K','€100K–€150K','€150K+'];
+const REVENUE_VALS=[1500,3500,7500,15000,27500,42500,62500,87500,125000,200000];
+
+// ── LANGUAGE ──────────────────────────────────────────────────────────────
+function setLang(l){
+  lang=l;
+  document.getElementById('lEN').classList.toggle('active',l==='en');
+  document.getElementById('lFI').classList.toggle('active',l==='fi');
+  document.querySelectorAll('[data-en]').forEach(el=>{
+    const t=el.getAttribute('data-'+l)||el.getAttribute('data-en');
+    if(el.tagName==='INPUT') el.placeholder=t;
+    else el.innerHTML=t;
+  });
+  if(A.bizType){buildQ3();buildQ5();}
+}
+
+// ── SEARCH FILTER ─────────────────────────────────────────────────────────
+function filterBiz(q){
+  const s=q.toLowerCase().trim();
+  document.querySelectorAll('.biz-btn').forEach(b=>{
+    const name=(b.getAttribute('data-en')||'').toLowerCase();
+    const biz=(b.getAttribute('data-biz')||'').toLowerCase();
+    b.classList.toggle('hidden-biz', s.length>0 && !name.includes(s) && !biz.includes(s));
+  });
+  document.querySelectorAll('.biz-group').forEach(g=>{
+    const visible=[...g.querySelectorAll('.biz-btn')].filter(b=>!b.classList.contains('hidden-biz'));
+    g.style.display=s.length>0&&visible.length===0?'none':'block';
+  });
+}
+
+// ── SELECTIONS ────────────────────────────────────────────────────────────
+function pickBiz(el,biz){
+  document.querySelectorAll('.biz-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  A.bizType=biz; A.pains=[]; A.tools=[];
+  buildQ3(); buildQ5();
+  document.getElementById('btn1').disabled=false;
+  scoreVal=1; updateScore();
+  if(window.mnTrack) window.mnTrack('biz_selected',biz,{biz});
+}
+
+function buildQ3(){
+  const sec=getSector(A.bizType);
+  const pains=PAINS[sec]||PAINS.sv;
+  const g=document.getElementById('q3-grid'); g.innerHTML='';
+  pains.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='mc'+(A.pains.includes(p.v)?' sel':'');
+    d.dataset.val=p.v;
+    d.innerHTML=`<div class="mc-tick">✓</div><div class="mc-icon">${p.icon}</div><div class="mc-title">${p[lang]||p.en}</div><div class="mc-sub">${p['sub_'+lang]||p.sub_en}</div>`;
+    d.onclick=()=>{
+      d.classList.toggle('sel');
+      if(d.classList.contains('sel')) A.pains.push(p.v);
+      else A.pains=A.pains.filter(x=>x!==p.v);
+      document.getElementById('btn3').disabled=A.pains.length===0;
+      buildQ4ratings();
+      scoreVal=calcScore(); updateScore();
+    };
+    g.appendChild(d);
+  });
+  document.getElementById('btn3').disabled=A.pains.length===0;
+}
+
+function buildQ4ratings(){
+  const sec=getSector(A.bizType);
+  const pains=PAINS[sec]||PAINS.sv;
+  const el=document.getElementById('q4-ratings'); el.innerHTML='';
+  A.pains.forEach(pv=>{
+    const pd=pains.find(p=>p.v===pv);
+    if(!pd) return;
+    const wrap=document.createElement('div');
+    wrap.style.cssText='margin-bottom:20px';
+    wrap.innerHTML=`<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px">${pd.icon} ${pd[lang]||pd.en}</div>`;
+    const rg=document.createElement('div');
+    rg.className='rating-grid';
+    [1,2,3,4,5].forEach(n=>{
+      const c=document.createElement('div');
+      c.className='rating-card'+(A.painRatings[pv]===n?' sel':'');
+      c.innerHTML=`<div class="rating-num">${n}</div><div class="rating-label">${['Minor','Low','Moderate','High','Critical'][n-1]}</div>`;
+      c.onclick=()=>{
+        rg.querySelectorAll('.rating-card').forEach(x=>x.classList.remove('sel'));
+        c.classList.add('sel');
+        A.painRatings[pv]=n;
+        scoreVal=calcScore(); updateScore();
+      };
+      rg.appendChild(c);
+    });
+    if(!A.painRatings[pv]) A.painRatings[pv]=3;
+    wrap.appendChild(rg);
+    el.appendChild(wrap);
+  });
+}
+
+function buildQ5(){
+  const sec=getSector(A.bizType);
+  const tools=TOOLS[sec]||TOOLS.sv;
+  const g=document.getElementById('q5-grid'); g.innerHTML='';
+  tools.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='mc'+(A.tools.includes(t.v)?' sel':'');
+    d.dataset.val=t.v;
+    d.innerHTML=`<div class="mc-tick">✓</div><div class="mc-title">${t[lang]||t.en}</div>`;
+    d.onclick=()=>{
+      d.classList.toggle('sel');
+      if(d.classList.contains('sel')) A.tools.push(t.v);
+      else A.tools=A.tools.filter(x=>x!==t.v);
+      scoreVal=calcScore(); updateScore();
+    };
+    g.appendChild(d);
+  });
+}
+
+function pick1(el,group,weight){
+  document.querySelectorAll('#'+group+'-opts .opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  A[group]=el.dataset.val;
+  document.getElementById('btn'+group.replace('q','')).disabled=false;
+  scoreVal=calcScore(); updateScore();
+}
+
+function pickRating(el,group){
+  el.closest('.rating-grid').querySelectorAll('.rating-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  A[group]=parseInt(el.dataset.val);
+  document.getElementById('btn5').disabled=false;
+  scoreVal=calcScore(); updateScore();
+}
+
+function updateRevenue(v){
+  A.revenue=parseInt(v);
+  document.getElementById('revenueVal').textContent='€'+REVENUE_LABELS[v-1]+' / month';
+  document.getElementById('btn2').disabled=!A.size;
+  scoreVal=calcScore(); updateScore();
+}
+
+// ── SCORING ───────────────────────────────────────────────────────────────
+function calcScore(){
+  if(!A.bizType) return 0;
+  const painScore=A.pains.reduce((s,p)=>s+(A.painRatings[p]||3),0);
+  const painMax=A.pains.length*5||1;
+  const pNorm=Math.min(painScore/painMax,1)*4;
+  const noTools=A.tools.includes('nothing')||A.tools.includes('excel');
+  const tScore=noTools?3:A.tools.length>0?1.5:2;
+  const rScore=A.readiness?A.readiness/10*3:1.5;
+  const revMult=1+Math.min(A.revenue/10,0.5);
+  return Math.min((pNorm+tScore+rScore)*revMult,10);
+}
+
+function updateScore(){
+  const v=parseFloat(calcScore().toFixed(1));
+  const pct=Math.min(v/10*100,100);
+  document.getElementById('lsFill').style.width=pct+'%';
+  document.getElementById('lsVal').textContent=v>0?v.toFixed(1):'—';
+  document.getElementById('liveScore').classList.toggle('active',v>0);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+function goTo(n){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('demo-screen').style.display='none';
+  if(n<=6) document.getElementById('s'+n).classList.add('active');
+  cur=n;
+  const pct=Math.round((n-1)/6*100);
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progLabel').textContent=(lang==='fi'?'Vaihe ':'Step ')+n+' of 6';
+  document.getElementById('progPct').textContent=pct+'%';
+  if(n===4) buildQ4ratings();
+  if(n===6) buildContactSummary();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildContactSummary(){
+  const el=document.getElementById('contactSummary');
+  const bname=(BIZ_NAMES[A.bizType]||{en:A.bizType})[lang];
+  const sc=calcScore().toFixed(1);
+  el.innerHTML=`
+    <div class="cs-row"><span class="cs-k">${lang==='fi'?'Yritystyyppi':'Business type'}</span><span class="cs-v">${bname}</span></div>
+    <div class="cs-row"><span class="cs-k">${lang==='fi'?'Pisteesi':'Your score'}</span><span class="cs-v">${sc}/10</span></div>
+    <div class="cs-row"><span class="cs-k">${lang==='fi'?'Tunnistetut ongelmat':'Issues identified'}</span><span class="cs-v">${A.pains.length} areas</span></div>
+    <div class="cs-row"><span class="cs-k">${lang==='fi'?'Tuottopotentiaali':'ROI potential'}</span><span class="cs-v">${calcROIRange()}</span></div>
+  `;
+}
+
+function calcROIRange(){
+  const rev=REVENUE_VALS[A.revenue-1]||7500;
+  const lo=Math.round(rev*0.05/100)*100;
+  const hi=Math.round(rev*0.18/100)*100;
+  return '€'+lo.toLocaleString()+' – €'+hi.toLocaleString()+'/mo';
+}
+
+// ── DEMO DASHBOARD ────────────────────────────────────────────────────────
+function animNum(id,from,to,dur){
+  const el=document.getElementById(id);if(!el)return;
+  const s=performance.now();
+  function f(t){
+    const p=Math.min((t-s)/dur,1);
+    const v=from+(to-from)*p;
+    el.textContent=typeof to==='number'&&to%1!==0?v.toFixed(1):Math.round(v);
+    if(p<1) requestAnimationFrame(f);
+  }
+  requestAnimationFrame(f);
+}
+
+function showDemo(){
+  document.getElementById('s5').classList.remove('active');
+  document.getElementById('progFill').style.width='85%';
+  document.getElementById('progLabel').textContent=(lang==='fi'?'Vaihe ':'Step ')+'5.5 of 6';
+  const ds=document.getElementById('demo-screen');
+  ds.style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  const score=parseFloat(calcScore().toFixed(1));
+  const risk=Math.min(A.pains.reduce((s,p)=>s+(A.painRatings[p]||3),0)/Math.max(A.pains.length*5,1)*10,10).toFixed(1);
+  const opp=Math.min((A.tools.includes('nothing')||A.tools.includes('excel')?8:5)+A.pains.length*0.3,10).toFixed(1);
+  const ready=(A.readiness||5).toFixed(1);
+
+  // Ring
+  setTimeout(()=>{
+    const circ=2*Math.PI*50;
+    const offset=circ-(score/10)*circ;
+    document.getElementById('ringArc').style.strokeDashoffset=offset;
+    animNum('ringScore',0,score,1400);
+  },300);
+
+  // Nodes
+  setTimeout(()=>{
+    animNum('nodeRisk',0,parseFloat(risk),1000);
+    animNum('nodeOpp',0,parseFloat(opp),1000);
+    animNum('nodeReady',0,parseFloat(ready),1000);
+    document.getElementById('nodeRiskSub').textContent=parseFloat(risk)>=7?'High risk — action needed':'Moderate — monitor closely';
+    document.getElementById('nodeOppSub').textContent=parseFloat(opp)>=7?'Strong AI opportunity':'Moderate opportunity';
+    document.getElementById('nodeReadySub').textContent=parseFloat(ready)>=6?'Ready to start':'Building readiness';
+    document.getElementById('ringLabel').textContent=score>=7?'High opportunity — strong AI ROI':score>=4?'Moderate — clear wins available':'Early stage — solid foundation';
+  },800);
+
+  // Insights
+  const sec=getSector(A.bizType);
+  const pains=PAINS[sec]||PAINS.sv;
+  const insEl=document.getElementById('insightList');
+  insEl.innerHTML='';
+  const msgs=[
+    {t:'warn',msg:`${A.pains.length} operational issue${A.pains.length!==1?'s':''} identified — combined severity ${A.pains.reduce((s,p)=>s+(A.painRatings[p]||3),0)} points`},
+    {t:'info',msg:`AI opportunity score: ${score}/10 — estimated €${Math.round(REVENUE_VALS[A.revenue-1]*0.08/100)*100}–€${Math.round(REVENUE_VALS[A.revenue-1]*0.18/100)*100}/mo recoverable`},
+    ...(A.tools.includes('nothing')||A.tools.includes('excel')?[{t:'warn',msg:'No integrated data systems detected — highest AI impact potential'}]:[]),
+    {t:'good',msg:`Readiness index ${A.readiness||5}/10 — ${A.readiness>=7?'ready to deploy':'building towards deployment'}`},
+  ];
+  msgs.forEach((m,i)=>{
+    setTimeout(()=>{
+      const d=document.createElement('div');
+      d.className='insight-item '+m.t;
+      d.innerHTML=`<div class="insight-dot"></div><div>${m.msg}</div>`;
+      insEl.appendChild(d);
+    },1000+i*350);
+  });
+
+  if(window.mnTrack) window.mnTrack('demo_viewed','dashboard',{biz:A.bizType,score:score.toFixed(1)});
+}
+
+function unlockReport(){
+  document.getElementById('demo-screen').style.display='none';
+  goTo(6);
+}
+
+// ── CONTACT ───────────────────────────────────────────────────────────────
+function chkContact(){
+  const ok=document.getElementById('iName').value.trim()&&
+           document.getElementById('iBiz').value.trim()&&
+           document.getElementById('iEmail').value.includes('@');
+  document.getElementById('btn6').disabled=!ok;
+}
+
+async function submitForm(){
+  const name=document.getElementById('iName').value.trim();
+  const biz=document.getElementById('iBiz').value.trim();
+  const email=document.getElementById('iEmail').value.trim();
+  const phone=document.getElementById('iPhone').value.trim();
+  const btn=document.getElementById('btn6');
+  btn.disabled=true;
+  const msg=document.getElementById('submitMsg');
+  msg.textContent=lang==='fi'?'Lähetetään…':'Submitting…';
+
+  const payload={
+    name,business:biz,email,phone,
+    biz_type:A.bizType,sector:getSector(A.bizType),
+    size:A.size,revenue_band:REVENUE_LABELS[A.revenue-1],
+    pains:A.pains.join(', '),
+    pain_ratings:JSON.stringify(A.painRatings),
+    tools:A.tools.join(', '),
+    readiness:A.readiness,
+    score:parseFloat(calcScore().toFixed(2)),
+    lang,
+    submitted_at:new Date().toISOString()
+  };
+
+  try{
+    if(SB_URL.includes('supabase')){
+      await fetch(SB_URL+'/rest/v1/meshnode_surveys',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Prefer':'return=minimal'},
+        body:JSON.stringify(payload)
+      });
+    }
+    await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{});
+    msg.textContent='';
+    showFullReport(name,biz,payload);
+    if(window.mnTrack) window.mnTrack('survey_complete','',{biz:A.bizType,score:payload.score});
+  } catch(e){
+    msg.className='submit-msg err';
+    msg.textContent='Error — email stanley@cognitivemeshlab.fi directly';
+    btn.disabled=false;
+  }
+}
+
+// ── FULL REPORT ───────────────────────────────────────────────────────────
+function showFullReport(name,bizName,p){
+  document.getElementById('s6').classList.remove('active');
+  document.getElementById('progFill').style.width='100%';
+  document.getElementById('progLabel').textContent=lang==='fi'?'Valmis':'Complete';
+  document.getElementById('progPct').textContent='100%';
+
+  const fr=document.getElementById('full-report');
+  fr.style.display='block';
+
+  document.getElementById('reportTitle').textContent=bizName+' — MeshNode Analysis';
+  document.getElementById('reportDate').textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  const score=parseFloat(calcScore().toFixed(1));
+  const rev=REVENUE_VALS[A.revenue-1];
+  const loROI=Math.round(rev*0.06/100)*100;
+  const hiROI=Math.round(rev*0.18/100)*100;
+  const yr1=Math.round(loROI*10/100)*100;
+  const yr1h=Math.round(hiROI*10/100)*100;
+
+  // Score breakdown
+  const risk=parseFloat(Math.min(A.pains.reduce((s,p)=>s+(A.painRatings[p]||3),0)/Math.max(A.pains.length*5,1)*10,10).toFixed(1));
+  const opp=parseFloat(Math.min((A.tools.includes('nothing')||A.tools.includes('excel')?8:5)+A.pains.length*0.3,10).toFixed(1));
+  document.getElementById('reportScores').innerHTML=`
+    <div class="roi-bar"><div class="roi-label"><span class="roi-lk">Overall opportunity</span><span class="roi-lv">${score}/10</span></div><div class="roi-track"><div class="roi-fill" style="width:${score*10}%"></div></div></div>
+    <div class="roi-bar"><div class="roi-label"><span class="roi-lk">Risk index</span><span class="roi-lv">${risk}/10</span></div><div class="roi-track"><div class="roi-fill" style="width:${risk*10}%;background:var(--red)"></div></div></div>
+    <div class="roi-bar"><div class="roi-label"><span class="roi-lk">AI opportunity index</span><span class="roi-lv">${opp}/10</span></div><div class="roi-track"><div class="roi-fill" style="width:${opp*10}%;background:var(--amber)"></div></div></div>
+    <div class="roi-bar"><div class="roi-label"><span class="roi-lk">Readiness index</span><span class="roi-lv">${A.readiness||5}/10</span></div><div class="roi-track"><div class="roi-fill" style="width:${(A.readiness||5)*10}%;background:var(--green)"></div></div></div>
+  `;
+
+  // ROI
+  document.getElementById('reportROI').innerHTML=`
+    <div class="roi-bar"><div class="roi-label"><span class="roi-lk">Monthly revenue recoverable (conservative)</span><span class="roi-lv">€${loROI.toLocaleString()}/mo</span></div><div class="roi-track"><div class="roi-fill" style="width:6%"></div></div></div>
+    <div class="roi-bar"><div class="roi-label"><span class="roi-lk">Monthly revenue recoverable (optimistic)</span><span class="roi-lv">€${hiROI.toLocaleString()}/mo</span></div><div class="roi-track"><div class="roi-fill" style="width:18%"></div></div></div>
+    <div class="roi-bar"><div class="roi-label"><span class="roi-lk">Year 1 cumulative potential</span><span class="roi-lv">€${yr1.toLocaleString()}–€${yr1h.toLocaleString()}</span></div><div class="roi-track"><div class="roi-fill" style="width:65%"></div></div></div>
+  `;
+  setTimeout(()=>document.querySelectorAll('.roi-fill').forEach(el=>{el.style.transition='width 1.2s cubic-bezier(.4,0,.2,1)'}),100);
+
+  // Recs
+  const recs=buildRecs(A.bizType,A.pains,A.painRatings,A.tools);
+  document.getElementById('reportRecs').innerHTML=recs.map((r,i)=>`
+    <div class="rec-card">
+      <div class="rec-priority">${i+1}</div>
+      <div class="rec-body">
+        <div class="rec-title">${r.title}</div>
+        <div class="rec-impact">↑ ${r.impact}</div>
+        <div class="rec-effort">Effort: ${r.effort} · Timeline: ${r.timeline}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Roadmap
+  document.getElementById('reportRoadmap').innerHTML=`
+    <div class="rec-card"><div class="rec-priority" style="background:var(--amber-dim);border-color:var(--amber);color:var(--amber)">W1</div><div class="rec-body"><div class="rec-title">Weeks 1–2: MeshAudit on-site visit</div><div class="rec-impact">↑ Connect to your existing data systems, identify exact automations</div><div class="rec-effort">Stanley visits your location in Oulu · Zero cost</div></div></div>
+    <div class="rec-card"><div class="rec-priority" style="background:var(--teal-dim);border-color:var(--teal);color:var(--teal)">M1</div><div class="rec-body"><div class="rec-title">Month 1: Deploy first AI agent</div><div class="rec-impact">↑ Highest-priority automation goes live · First ROI visible</div><div class="rec-effort">€149/mo MeshNode Starter plan</div></div></div>
+    <div class="rec-card"><div class="rec-priority" style="background:var(--green-dim);border-color:var(--green);color:var(--green)">M3</div><div class="rec-body"><div class="rec-title">Month 2–3: Expand to full node coverage</div><div class="rec-impact">↑ All identified pain points addressed · Full dashboard active</div><div class="rec-effort">€349/mo MeshNode Professional plan</div></div></div>
+  `;
+
+  fr.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildRecs(biz,pains,ratings,tools){
+  const recs=[];
+  const sec=getSector(biz);
+  const sorted=[...pains].sort((a,b)=>(ratings[b]||3)-(ratings[a]||3));
+
+  const recMap={
+    waste:{title:'Deploy AI demand forecasting agent',impact:'Reduce waste 25–45% — recover €200–800/mo',effort:'Low',timeline:'2–3 weeks'},
+    staffing:{title:'AI shift optimisation system',impact:'Cut labour waste 8–15% — reduce over/under-staffing',effort:'Medium',timeline:'3–4 weeks'},
+    slowdays:{title:'Demand prediction model (weather + events)',impact:'Increase covers 15–30% on slow days',effort:'Low',timeline:'2 weeks'},
+    margins:{title:'Menu / product profitability tracker',impact:'Identify loss-making items — improve margin 4–8%',effort:'Low',timeline:'1 week'},
+    equipment:{title:'Equipment health monitoring agent',impact:'Predict failures 1–2 weeks early — avoid €2–5K emergency costs',effort:'Medium',timeline:'4–6 weeks'},
+    customers:{title:'Customer churn prediction + re-engagement',impact:'Recover 20–35% of at-risk regulars',effort:'Low',timeline:'2 weeks'},
+    noshows:{title:'Automated no-show prevention system',impact:'Reduce no-shows 40–60% — recover lost slot revenue',effort:'Low',timeline:'1 week'},
+    rebooking:{title:'Automated rebooking reminder agent',impact:'Increase return rate 20–40%',effort:'Low',timeline:'1 week'},
+    inventory:{title:'AI inventory prediction engine',impact:'Reduce overstock 25–40%, eliminate stockouts',effort:'Medium',timeline:'3–4 weeks'},
+    scheduling:{title:'Intelligent scheduling optimiser',impact:'Reduce scheduling errors 60%, improve utilisation',effort:'Medium',timeline:'3 weeks'},
+    invoicing:{title:'Automated invoice trigger system',impact:'Cut payment delays 40% — improve cash flow',effort:'Low',timeline:'1 week'},
+    clients:{title:'Client churn early-warning system',impact:'Detect at-risk clients 3–6 weeks early',effort:'Low',timeline:'2 weeks'},
+    admin:{title:'Admin automation agent',impact:'Save 4–8 hours per week on paperwork',effort:'Low',timeline:'2 weeks'},
+  };
+
+  sorted.slice(0,4).forEach(p=>{
+    if(recMap[p]) recs.push(recMap[p]);
+  });
+  if(recs.length===0) recs.push({title:'AI operations audit',impact:'Identify top 3 automation opportunities specific to your business',effort:'Zero',timeline:'On-site visit'});
+  return recs;
+}
+</script>
+</body>
+</html>

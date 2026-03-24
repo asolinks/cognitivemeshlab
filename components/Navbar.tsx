@@ -311,6 +311,49 @@ export default function Navbar() {
               </span>
             </div>
 
+            {/* Mobile language toggle — only on /analyse */}
+            {pathname.startsWith('/analyse') && (
+              <div style={{
+                padding: '14px 12px 10px',
+                borderBottom: '1px solid rgba(90,110,245,0.1)',
+              }}>
+                <div style={{
+                  display: 'flex',
+                  gap: 0,
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  border: '1px solid rgba(20,184,166,0.25)',
+                }}>
+                  {(['EN', 'FI'] as const).map(l => (
+                    <button
+                      key={l}
+                      onClick={() => {
+                        const lang = l.toLowerCase()
+                        localStorage.setItem('meshnode_lang', lang)
+                        window.dispatchEvent(new CustomEvent('meshnode_lang', { detail: lang }))
+                        setOpen(false)
+                      }}
+                      style={{
+                        flex: 1,
+                        minHeight: 44,
+                        padding: '10px 14px',
+                        fontSize: 12,
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 600,
+                        letterSpacing: '0.08em',
+                        border: 'none',
+                        background: 'rgba(20,184,166,0.08)',
+                        color: '#14b8a6',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Mobile links */}
             <div style={{ padding: '8px 8px' }}>
               {links.map(l => {
