@@ -284,7 +284,8 @@ export default function HomePage() {
       </section>
 
       {/* ── MESHNODE CTA ── */}
-      <section style={{
+      <section style={{ padding: '0 24px', maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{
         margin: '80px 0',
         padding: '48px 40px',
         background: 'rgba(20,184,166,0.05)',
@@ -344,6 +345,7 @@ export default function HomePage() {
             <span style={{ color: 'rgba(255,255,255,0.35)' }}>
               free on-site analyses remaining
             </span>
+            </div>
           </div>
         </div>
       </section>
